@@ -1,0 +1,17 @@
+{
+    "currency": "EUR",
+    "vatRate": 12.9,
+    "priceComponents": [
+    {
+    "category": "ZUZAHLUNG",
+    "type": "informational",
+    "insurantCost": 5.0,
+    "totalCost": 7.88,
+    "pzn": "18203330"
+    },
+    {
+    "category": "ZUZAHLUNG",
+    "type": "informational"
+    }
+    ]
+    }
