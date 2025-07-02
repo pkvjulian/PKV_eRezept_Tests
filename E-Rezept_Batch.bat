@@ -3,7 +3,7 @@ DEL prescription_log.txt
 ECHO Willkommen zur Ausstellung eines E-Rezepts
 TIMEOUT /t 1 /nobreak > NUL
 ECHO Dieses Programm basiert auf der ERPione Testmoeglichkeit der gematik. Das Batchfile wird durch den PKV-Verband bereitgestellt
-ECHO Skript-Version 2.0 vom 18.06.2025
+ECHO Skript-Version 2.1 vom 02.07.2025
 ECHO ERPione Version:
 .\erpione-win.exe --version
 TIMEOUT /t 2 /nobreak > NUL
@@ -27,6 +27,7 @@ echo Das Client-Timeout ist nun auf %ERPIONE_REQ_TIMEOUT% Sekunden eingestellt
 
 :CHECK_AGAIN
 set task_id=EMPTY
+set AccessCode=EMPTY
 
 echo Welche Art von Verordnung moechtest du ausstellen?
 echo [1] Einfachverordnung.xml
@@ -55,9 +56,13 @@ for /f "tokens=10" %%a in ('findstr /c:"Task-ID" prescription_log.txt') do (
     set task_id=%%a
 )
 ECHO Task-ID: %task_id%
+for /f "tokens=13" %%a in ('findstr /c:"AccessCode" prescription_log.txt') do (
+    set AccessCode=%%a
+)
+ECHO AccessCode: %AccessCode%
 
-ECHO Wurde hier eine Task-ID angezeigt und ist das E-Rezept in deiner Testapp angekommen? 
-SET /P AREYOUSURE=Ja, ich kann Task-ID und das Rezept sehen (Y/[N])?
+ECHO Wurde hier eine Task-ID und ein AccessCode angezeigt und ist das E-Rezept in deiner Testapp angekommen? 
+SET /P AREYOUSURE=Ja, ich kann Task-ID, AccessCode und das Rezept sehen (Y/[N])?
 IF /I "%AREYOUSURE%" NEQ "Y" GOTO RETRY_OFFER
 
 ECHO Super! Moechtest du das Rezept auch gleich einloesen?
@@ -66,7 +71,13 @@ IF /I "%AREYOUSURE%" NEQ "Y" GOTO KEEP_LOG
 ECHO Okay, dein Rezept wird nun in zwei Schritten eingeloest. Zunaechst wird es von einer Apotheke angenommen (akzeptiert) und dann dispensiert.
 
 :RETRY_ACCEPT
-.\erpione-win.exe accept --taskid %task_id% -e ru >> prescription_log.txt 2>&1
+.\erpione-win.exe accept --taskid %task_id% --accesscode %AccessCode% -e ru >> prescription_log.txt 2>&1
+
+: : secret speichern, falls für dispense Schritt später notwendig. Muss aber noch gecleaned werden, weil Anführungszeichen mitgespeichert werden
+for /f "tokens=20" %%a in ('findstr /c:"secret" prescription_log.txt') do (
+    set secret=%%a
+)
+
 
 SET /P AREYOUSURE=Wird das Rezept in der App als in Einloesung angezeigt? (Y/[N])?
 IF /I "%AREYOUSURE%" NEQ "Y" GOTO RETRY_ACCEPT
